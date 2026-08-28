@@ -4,6 +4,14 @@ import uuid
 from fastapi import FastAPI, File, UploadFile, HTTPException, BackgroundTasks
 import uvicorn
 import pypdf
+from pydantic import BaseModel
+from chunk import ingest_docs
+
+
+class ChatRequest(BaseModel):
+    file_id:str
+    question:str
+ 
 
 app = FastAPI(title='Chat-PDF')
 
@@ -63,7 +71,7 @@ async def upload_pdf(background_tasks: BackgroundTasks, file: UploadFile = File(
     }
 
     # 4. Trigger the background task
-    background_tasks.add_task(process_pdf, file_id, file_path)
+    background_tasks.add_task(ingest_docs, file_id, file_path,file.filename, file_db)
 
     return {"file_id": file_id, "message": "File uploaded successfully. Processing started."}
 
