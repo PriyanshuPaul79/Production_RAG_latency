@@ -35,5 +35,17 @@ def hybrid_ret(question:str, file_id:str, top_k:int):
     )
     sem_id = sem_result['ids'][0] if sem_result['ids'] else []
 
-    token_docs = [doc.lower()]
+    token_docs = [doc.lower().split() for doc in documents]
+    bm25 = BM25Okapi(token_docs)
+    bm25_scores = bm25.get_scores(question.lower().split())
+
+    top_bm25 = np.argsort(bm25_scores)[::-1][:top_k]
+    bm_id = [ids[i] for i in top_bm25]
+
+    combined_ids = list(set(sem_id + bm_id))
+    final_ans = collection.get(
+        ids=combined_ids,
+        include=['documents']
+    )
+    return final_ans['documents'][:top_k]
 
